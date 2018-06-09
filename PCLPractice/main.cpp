@@ -22,13 +22,25 @@ int main( int argc, int** argv )
 
 	//サンプル点群 
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointCloudPtr = PCLFunctions::GetSamplePointCloudPtr( );
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr dataCloudPtr( new pcl::PointCloud<pcl::PointXYZRGB> );
+
+	// 点群データ読み込み 
+	//pcl::io::loadPCDFile<pcl::PointXYZRGB>( "..\\data\\robot\\raw_0.pcd", *dataCloudPtr );
+	pcl::io::loadPCDFile<pcl::PointXYZRGB>( "realsense_color.pcd", *dataCloudPtr );
 
 	//Realsense点群
-	pcl::PointCloud<pcl::PointXYZ>::Ptr rsCloudPtr( new pcl::PointCloud<pcl::PointXYZ> );
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr rsCloudPtr( new pcl::PointCloud<pcl::PointXYZRGB> );
 
 	std::shared_ptr<pcl::visualization::PCLVisualizer> viewer;
 
-	viewer = PCLFunctions::CreatePointCloudViewer( rsCloudPtr, "cloud_viewer" );
+	viewer = PCLFunctions::CreatePointCloudViewer<pcl::PointXYZRGB>( dataCloudPtr, "cloud_viewer" );
+	//viewer = PCLFunctions::CreatePointCloudViewer<pcl::PointXYZRGB>( rsCloudPtr, "cloud_viewer" );
+	// sキーを押したときにデータを保存する
+	viewer->registerKeyboardCallback( [ & ]( const pcl::visualization::KeyboardEvent &event ) { 
+		if( event.getKeySym( ) == "s" && event.keyDown( ) ) {
+			pcl::io::savePCDFileBinary( "realsense_color.pcd", *rsCloudPtr );
+		}
+	} );
 
 	// ====================
 	// メインループ
@@ -39,8 +51,10 @@ int main( int argc, int** argv )
 		int err = PCLFunctions::GenerateRSPointCloud( dev, rsCloudPtr );
 		assert( err == 0 );
 
+		//PCLFunctions::PlaneDetect( rsCloudPtr, 0.1 );
+
 		// ===== データの更新 =====
-		viewer->updatePointCloud( rsCloudPtr, "cloud_viewer" );
+		//viewer->updatePointCloud( rsCloudPtr, "cloud_viewer" );
 
 		viewer->spinOnce( 1 );
 	}

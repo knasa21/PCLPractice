@@ -2,60 +2,41 @@
 
 namespace PCLFunctions
 {
+
 	/// <summary>
-	/// ポイントクラウドを表示するためのウィンドウを作成する
+	/// 平面検出
 	/// </summary>
-	/// <param name="cloud"> 表示するポイントクラウド </param>
-	/// <returns> ビジュアライザを返す </returns>
-	std::shared_ptr<pcl::visualization::PCLVisualizer> CreatePointCloudViewer(
-		const typename pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr &cloud,
-		const std::string &id,
-		int viewport
-	)
+	/// <param name="cloud">点群</param>
+	/// <param name="threshold">閾値</param>
+	/// <returns>indicesを返す</returns>
+	pcl::PointIndices::Ptr PlaneDetect( pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, double threshold )
 	{
-		// Open 3D viewer and add point cloud
-		// 3Dビューワーを開きポイントクラウドを追加
-		std::shared_ptr<pcl::visualization::PCLVisualizer> viewer(
-			new pcl::visualization::PCLVisualizer( "PCL Viewer" )
-		);
+		pcl::PointIndices::Ptr inliers( new pcl::PointIndices );
+		pcl::ModelCoefficients::Ptr coefficients( new pcl::ModelCoefficients );
 
-		viewer->setBackgroundColor( 0.251, 0.251, 0.251 );
-		viewer->addPointCloud<pcl::PointXYZRGB>( cloud, id );
-		viewer->setPointCloudRenderingProperties(
-			pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id
-		);
-		viewer->addCoordinateSystem( 1.0 );
-		viewer->initCameraParameters( );
-		viewer->setShowFPS( false );
+		// セグメンテーションオブジェクトの生成
+		pcl::SACSegmentation<pcl::PointXYZRGB> seg;
+		// オプション
+		seg.setOptimizeCoefficients( true );
+		// ===== 必須 =====
+		seg.setModelType( pcl::SACMODEL_PLANE );	// 平面	
+		seg.setMethodType( pcl::SAC_RANSAC );		// RANSACを使用
+		seg.setDistanceThreshold( threshold );
 
-		return( viewer );
+		seg.setInputCloud( cloud );
+		seg.segment( *inliers, *coefficients );
+
+
+		return inliers;
 	}
 
-	std::shared_ptr<pcl::visualization::PCLVisualizer> CreatePointCloudViewer(
-		const typename pcl::PointCloud<pcl::PointXYZ>::ConstPtr &cloud,
-		const std::string &id,
-		int viewport
-	)
+	pcl::PointIndices::Ptr PlaneDetect( pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, double threshold )
 	{
-		// Open 3D viewer and add point cloud
-		// 3Dビューワーを開きポイントクラウドを追加
-		std::shared_ptr<pcl::visualization::PCLVisualizer> viewer(
-			new pcl::visualization::PCLVisualizer( "PCL Viewer" )
-		);
+		pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointCloud( new pcl::PointCloud<pcl::PointXYZRGB> );
+		pcl::copyPointCloud( *cloud, *pointCloud );
 
-		viewer->setBackgroundColor( 0.251, 0.251, 0.251 );
-		viewer->addPointCloud<pcl::PointXYZ>( cloud, id );
-		viewer->setPointCloudRenderingProperties(
-			pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, id
-		);
-		viewer->addCoordinateSystem( 1.0 );
-		viewer->initCameraParameters( );
-		viewer->setShowFPS( false );
-
-		return( viewer );
+		return PlaneDetect( pointCloud, threshold );
 	}
-
-
 
 	/// <summary>
 	/// サンプル用ポイントクラウドを返す
