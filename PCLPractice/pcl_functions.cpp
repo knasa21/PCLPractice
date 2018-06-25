@@ -4,41 +4,6 @@ namespace PCLFunctions
 {
 
 	/// <summary>
-	/// 平面検出
-	/// </summary>
-	/// <param name="cloud">点群</param>
-	/// <param name="threshold">閾値</param>
-	/// <returns>indicesを返す</returns>
-	pcl::PointIndices::Ptr PlaneDetect( pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, double threshold )
-	{
-		pcl::PointIndices::Ptr inliers( new pcl::PointIndices );
-		pcl::ModelCoefficients::Ptr coefficients( new pcl::ModelCoefficients );
-
-		// セグメンテーションオブジェクトの生成
-		pcl::SACSegmentation<pcl::PointXYZRGB> seg;
-		// オプション
-		seg.setOptimizeCoefficients( true );
-		// ===== 必須 =====
-		seg.setModelType( pcl::SACMODEL_PLANE );	// 平面	
-		seg.setMethodType( pcl::SAC_RANSAC );		// RANSACを使用
-		seg.setDistanceThreshold( threshold );
-
-		seg.setInputCloud( cloud );
-		seg.segment( *inliers, *coefficients );
-
-
-		return inliers;
-	}
-
-	pcl::PointIndices::Ptr PlaneDetect( pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, double threshold )
-	{
-		pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointCloud( new pcl::PointCloud<pcl::PointXYZRGB> );
-		pcl::copyPointCloud( *cloud, *pointCloud );
-
-		return PlaneDetect( pointCloud, threshold );
-	}
-
-	/// <summary>
 	/// サンプル用ポイントクラウドを返す
 	/// </summary>
 	/// <returns> ポイントクラウド </returns>

@@ -70,7 +70,7 @@ namespace PCLFunctions {
 		dwh = dw * dh;
 
 		//遠距離データの削除
-		const int noisy	= 3.5;
+		const int noisy	= 3.0;
 
 		//Cloudデータの初期化
 		rsCloudPtr->clear( );

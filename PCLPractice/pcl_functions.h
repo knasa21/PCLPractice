@@ -5,6 +5,8 @@
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/filters/extract_indices.h>
+#include <pcl/sample_consensus/method_types.h>
+#include <pcl/sample_consensus/model_types.h>
 
 namespace PCLFunctions
 {
@@ -43,7 +45,35 @@ namespace PCLFunctions
 	pcl::PointCloud< pcl::PointXYZRGB >::Ptr GetSamplePointCloudPtr( );
 
 	// ïΩñ åüèo
-	pcl::PointIndices::Ptr PlaneDetect( pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, double threshold );
-	pcl::PointIndices::Ptr PlaneDetect( pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, double threshold );
+	template <typename PointT>
+	void PlaneDetect(
+		typename pcl::PointCloud<PointT>::Ptr cloud,
+		double	threshold,
+		bool	removePlane = true
+	)
+	{
+		pcl::ModelCoefficients::Ptr coefficients( new pcl::ModelCoefficients );
+		pcl::PointIndices::Ptr inliers( new pcl::PointIndices );
+
+		pcl::SACSegmentation<PointT> seg;
+
+		seg.setOptimizeCoefficients( true );
+
+		seg.setModelType( pcl::SACMODEL_PLANE );
+		seg.setMethodType( pcl::SAC_RANSAC );
+		seg.setDistanceThreshold( threshold );
+
+		seg.setInputCloud( cloud );
+		seg.segment( *inliers, *coefficients );
+
+		pcl::ExtractIndices<PointT> extract;
+		extract.setInputCloud( cloud );
+		extract.setIndices( inliers );
+		extract.setNegative( removePlane );
+
+		extract.filter( *cloud );
+
+	}
+
 
 }
