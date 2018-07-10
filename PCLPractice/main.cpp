@@ -1,93 +1,96 @@
+#pragma once
 #include <boost/thread/thread.hpp>
 #include <pcl/common/common_headers.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/io/pcd_io.h>
-#include <pcl/visualization/pcl_visualizer.h>
+
 #include <pcl/console/parse.h>
 
 #include "pcl_functions.h"
 #include "realsense_manager.h"
+#include "PCLWrapper/PWCVisualizer.h"
+#include "PCLWrapper/PWCRSStreamerLib1121.h"
 
 #include <boost/range/algorithm_ext/erase.hpp>
-
 #include <pcl/segmentation/organized_connected_component_segmentation.h>
+#include <pcl/features/integral_image_normal.h>
+
+using namespace PCLWrapper;
+
+typedef pcl::PointXYZ PointType;
 
 void CheckLength( pcl::PointCloud<pcl::PointXYZRGB>& cloud, double length )
 {
-	for( auto it = cloud.begin( ); it != cloud.end( ); ++it ) {
+	for( auto it = cloud.begin(); it != cloud.end(); ++it ) {
 		/*if( it->y < -0.3 ) {
 			it->r = 0;
 			it->g = 255;
 			it->b = 0;
 		}*/
 	}
-	boost::remove_erase_if( cloud, [ = ]( pcl::PointXYZRGB p ) { return p.z > length || p.y < -0.3; } );
+	boost::remove_erase_if( cloud, [=]( pcl::PointXYZRGB p ) { return p.z > length || p.y < -0.3; } );
 }
 
+//pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud( new pcl::PointCloud<pcl::PointXYZRGB> );
+pcl::ModelCoefficients::Ptr coefficients( new pcl::ModelCoefficients );
+pcl::PointIndices::Ptr inliers( new pcl::PointIndices );
 
-void Segmentation( )
+//平面検出関数
+void planeDetect( pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, double threshold )
 {
-
+	pcl::SACSegmentation<pcl::PointXYZ> seg;
+	seg.setOptimizeCoefficients( true );
+	//必須
+	seg.setInputCloud( cloud );
+	seg.setModelType( pcl::SACMODEL_PLANE );//モデル
+	seg.setMethodType( pcl::SAC_RANSAC );//検出手法
+	seg.setDistanceThreshold( threshold ); //閾値 0.5とか
+	seg.segment( *inliers, *coefficients );
 }
+
+//平面除去関数
+void planeRemoval( pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::PointIndices::Ptr inliers, bool negative )
+{
+	pcl::ExtractIndices<pcl::PointXYZ> extract;
+
+	extract.setInputCloud( cloud );
+	extract.setIndices( inliers );
+	extract.setNegative( negative );// true にすると平面を除去、false にすると平面以外を除去
+	extract.filter( *cloud );
+}
+
 
 int main( int argc, int** argv )
 {
 
-	// Realsence context
-	rs::context ctx;
-	PCLFunctions::PrintRSContextInfo( &ctx );
+	// PointCloud
+	pcl::PointCloud<PointType>::Ptr cloud( new pcl::PointCloud<PointType>() );
+	pcl::PointCloud<PointType>::Ptr rsCloud( new pcl::PointCloud<PointType>() );
+	
+	// Realsense
+	std::unique_ptr<PWIRSStreamer> rsStreamer( new PWCRSStreamerLib1121( 0 ) );
+	rsStreamer->SetStreamingMode( PWIRSStreamer::Depth );
+	rsStreamer->Start();
 
-	//デバイスの取得
-	rs::device * dev = ctx.get_device( 0 );
+	// pcd 読み込み
+	pcl::io::loadPCDFile<PointType>( "..\\data\\table_scene_lms400_downsampled.pcd", *cloud );
 
-	PCLFunctions::ConfigureRSStreams( dev );
+	// Visualizer
+	PWCVisualizer<PointType> visualizer( "window", "rsCloud" );
+	visualizer.Create( rsCloud );
+	visualizer.GetViewer()->addPointCloud( cloud, "cloud" );
 
-	//サンプル点群 
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointCloudPtr = PCLFunctions::GetSamplePointCloudPtr( );
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr dataCloudPtr( new pcl::PointCloud<pcl::PointXYZRGB> );
-	//pcl::PointCloud<pcl::PointXYZ>::Ptr dataCloudPtr( new pcl::PointCloud<pcl::PointXYZ> );
+	//planeDetect( cloud, 0.03 );
+	//planeRemoval( cloud, inliers, true );
 
-	// 点群データ読み込み 
-	//pcl::io::loadPCDFile<pcl::PointXYZRGB>( "..\\data\\robot\\raw_0.pcd", *dataCloudPtr );
-	//pcl::io::loadPCDFile<pcl::PointXYZRGB>( "realsense_color_cut.pcd", *dataCloudPtr );
-	//pcl::io::loadPCDFile<pcl::PointXYZ>( "table_scene_lms400_downsampled.pcd", *dataCloudPtr );
+	//visualizer.UpdatePointCloud( cloud );
 
-	//PCLFunctions::PlaneDetect<pcl::PointXYZRGB>( dataCloudPtr, 0.01 );
-
-	//Realsense点群
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr rsCloudPtr( new pcl::PointCloud<pcl::PointXYZRGB> );
-
-	std::shared_ptr<pcl::visualization::PCLVisualizer> viewer;
-	//viewer = PCLFunctions::CreatePointCloudViewer<pcl::PointXYZRGB>( dataCloudPtr, "cloud_viewer" );
-	viewer = PCLFunctions::CreatePointCloudViewer<pcl::PointXYZRGB>( rsCloudPtr, "cloud_viewer" );
-	// sキーを押したときにデータを保存する
-	viewer->registerKeyboardCallback( [ & ]( const pcl::visualization::KeyboardEvent &event )
+	while( !visualizer.WasStopped() )
 	{
-		if( event.getKeySym( ) == "s" && event.keyDown( ) ) {
-			pcl::io::savePCDFileBinary( "realsense_color.pcd", *dataCloudPtr );
-		}
-	} );
+		rsStreamer->Update( rsCloud );
 
-	//CheckLength( *dataCloudPtr, 1.7 );
-	//viewer->updatePointCloud( dataCloudPtr, "cloud_viewer" );
-
-	// ====================
-	// メインループ
-	// ====================
-	while( !viewer->wasStopped( ) )
-	{
-		// ===== データの取得 =====
-		int err = PCLFunctions::GenerateRSPointCloud( dev, rsCloudPtr );
-		assert( err == 0 );
-
-		//PCLFunctions::PlaneDetect<pcl::PointXYZRGB>( rsCloudPtr, 0.02 );
-		CheckLength( *rsCloudPtr, 1.7 );
-
-		// ===== データの更新 =====
-		viewer->updatePointCloud( rsCloudPtr, "cloud_viewer" );
-
-		viewer->spinOnce( 1 );
+		visualizer.UpdatePointCloud( rsCloud );
+		visualizer.GetViewer()->spinOnce();
 	}
 
-	return 0;
 }

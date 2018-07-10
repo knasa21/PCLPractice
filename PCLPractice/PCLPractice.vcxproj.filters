@@ -13,6 +13,15 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="ソース ファイル\PCLWrapper">
+      <UniqueIdentifier>{ad221080-8f7d-4b16-b225-b2052851b02c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\PCLWrapper\Source">
+      <UniqueIdentifier>{338f7e7a-ee4f-4f79-ad11-cb40d4ad296d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\PCLWrapper\Header">
+      <UniqueIdentifier>{c3327a6e-968b-4da2-924f-2abf7b4d5bb3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pcl_functions.cpp">
@@ -24,6 +33,9 @@
     <ClCompile Include="main.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="PCLWrapper\PWCRSStreamerLib1121.cpp">
+      <Filter>ソース ファイル\PCLWrapper\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pcl_functions.h">
@@ -31,6 +43,15 @@
     </ClInclude>
     <ClInclude Include="realsense_manager.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="PCLWrapper\PWCVisualizer.h">
+      <Filter>ソース ファイル\PCLWrapper\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="PCLWrapper\PWCRSStreamerLib1121.h">
+      <Filter>ソース ファイル\PCLWrapper\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="PCLWrapper\PWIRSStreamer.h">
+      <Filter>ソース ファイル\PCLWrapper\Header</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

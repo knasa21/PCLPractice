@@ -3,304 +3,305 @@
 
 namespace PCLFunctions {
 
-	//===================================================================
-	// provides context info and will exit if no devices
-	//===================================================================
-	int PrintRSContextInfo( rs::context *c )
-	{
-		printf( "There are %d connected RealSense devices.\n", c->get_device_count( ) );
-		if( c->get_device_count( ) == 0 )
-			throw std::runtime_error( "No device detected. Is it plugged in?" );
+//===================================================================
+// provides context info and will exit if no devices
+//===================================================================
+int PrintRSContextInfo( rs::context *c )
+{
+	printf( "There are %d connected RealSense devices.\n", c->get_device_count() );
+	if( c->get_device_count() == 0 )
+		throw std::runtime_error( "No device detected. Is it plugged in?" );
 
-		return EXIT_SUCCESS;
-	}
-
-
-
-	//===================================================================
-	// stream config & enabling for device
-	//===================================================================
-	int ConfigureRSStreams( rs::device *rsCamera )
-	{
-		std::cout << "Configuring RS streaming " << rsCamera->get_name( ) << "... ";
-
-		//rsCamera->enable_stream( rs::stream::depth, rs::preset::best_quality );
-		//rsCamera->enable_stream( rs::stream::color, rs::preset::best_quality );
-		rsCamera->enable_stream( rs::stream::depth, rs::preset::highest_framerate );
-		rsCamera->enable_stream( rs::stream::color, rs::preset::highest_framerate );
-		rsCamera->start( );
-
-		std::cout << "RS streaming enabled and running.\n";
-
-		return EXIT_SUCCESS;
-	}
+	return EXIT_SUCCESS;
+}
 
 
-	/// <summary>
-	/// ポイントクラウドデータの作成
-	/// </summary>
-	/// <param name="dev">入力のRealSence device</param>
-	/// <param name="rsCloudPtr">ポイントクラウドデータ</param>
-	/// <returns>終了状態</returns>
-	int GenerateRSPointCloud( rs::device *dev, pcl::PointCloud<pcl::PointXYZRGB>::Ptr rsCloudPtr )
-	{
 
-		//新しいデータを待つ
-		if( dev->is_streaming( ) )
-			dev->wait_for_frames( );
+//===================================================================
+// stream config & enabling for device
+//===================================================================
+int ConfigureRSStreams( rs::device *rsCamera )
+{
+	std::cout << "Configuring RS streaming " << rsCamera->get_name() << "... ";
 
-		//画像用変数
-		const uint16_t * depthImage		= ( const uint16_t * )dev->get_frame_data( rs::stream::depth );
-		const uint8_t  * colorImage	= ( const uint8_t  * )dev->get_frame_data( rs::stream::color );
+	//rsCamera->enable_stream( rs::stream::depth, rs::preset::best_quality );
+	//rsCamera->enable_stream( rs::stream::color, rs::preset::best_quality );
+	rsCamera->enable_stream( rs::stream::depth, rs::preset::highest_framerate );
+	rsCamera->enable_stream( rs::stream::color, rs::preset::highest_framerate );
+	rsCamera->start();
 
-		//デプスとカラーの合成用
-		rs::intrinsics depthIntrin		= dev->get_stream_intrinsics( rs::stream::depth );
-		rs::extrinsics depthToColor		= dev->get_extrinsics( rs::stream::depth, rs::stream::color );
-		rs::intrinsics colorIntrin		= dev->get_stream_intrinsics( rs::stream::color );
-		float scale						= dev->get_depth_scale( );
+	std::cout << "RS streaming enabled and running.\n";
 
-		//デプスの各サイズ
-		int dw	= 0;
-		int dh	= 0;
-		int dwh	= 0;
+	return EXIT_SUCCESS;
+}
 
-		dw = depthIntrin.width;
-		dh = depthIntrin.height;
 
-		dwh = dw * dh;
+/// <summary>
+/// ポイントクラウドデータの作成
+/// </summary>
+/// <param name="dev">入力のRealSence device</param>
+/// <param name="rsCloudPtr">ポイントクラウドデータ</param>
+/// <returns>終了状態</returns>
+int GenerateRSPointCloud( rs::device *dev, pcl::PointCloud<pcl::PointXYZRGB>::Ptr rsCloudPtr )
+{
 
-		//遠距離データの削除
-		const int noisy	= 3.0;
+	//新しいデータを待つ
+	if( dev->is_streaming() )
+		dev->wait_for_frames();
 
-		//Cloudデータの初期化
-		rsCloudPtr->clear( );
-		rsCloudPtr->is_dense = false;
-		rsCloudPtr->resize( dwh );
+	//画像用変数
+	const uint16_t * depthImage		= ( const uint16_t * )dev->get_frame_data( rs::stream::depth );
+	const uint8_t  * colorImage	= ( const uint8_t  * )dev->get_frame_data( rs::stream::color );
 
-		// データの入れるためのループ
-		// 列
-		for( int dy = 0; dy < dh; dy++ ) {
+	//デプスとカラーの合成用
+	rs::intrinsics depthIntrin		= dev->get_stream_intrinsics( rs::stream::depth );
+	rs::extrinsics depthToColor		= dev->get_extrinsics( rs::stream::depth, rs::stream::color );
+	rs::intrinsics colorIntrin		= dev->get_stream_intrinsics( rs::stream::color );
+	float scale						= dev->get_depth_scale();
 
-			//行
-			for( int dx = 0; dx < dw; dx++ ) {
-				unsigned int i = dy * dw + dx;
-				uint16_t depthValue = depthImage[ i ];
+	//デプスの各サイズ
+	int dw	= 0;
+	int dh	= 0;
+	int dwh	= 0;
 
-				if( depthValue == 0 )
-					continue;
+	dw = depthIntrin.width;
+	dh = depthIntrin.height;
 
-				rs::float2 depthPixel ={ ( float )dx, ( float )dy };
-				float depthInMeters	  = depthValue * scale;
+	dwh = dw * dh;
 
-				rs::float3 depthPoint = depthIntrin.deproject( depthPixel, depthInMeters );
-				rs::float3 colorPoint = depthToColor.transform( depthPoint );
-				rs::float2 colorPixel = colorIntrin.project( colorPoint );
+	//遠距離データの削除
+	const int noisy	= 3.0;
 
-				const int cx = ( int )std::round( colorPixel.x );
-				const int cy = ( int )std::round( colorPixel.y );
+	//Cloudデータの初期化
+	rsCloudPtr->clear();
+	rsCloudPtr->is_dense = false;
+	rsCloudPtr->resize( dwh );
 
-				static const float nan = std::numeric_limits<float>::quiet_NaN( );
+	// データの入れるためのループ
+	// 列
+	for( int dy = 0; dy < dh; dy++ ) {
 
-				//不要な点の削除
-				bool depthFail = true;
-				bool colorFail = true;
+		//行
+		for( int dx = 0; dx < dw; dx++ ) {
+			unsigned int i = dy * dw + dx;
+			uint16_t depthValue = depthImage[ i ];
 
-				depthFail = ( depthPoint.z > noisy );
-				colorFail = ( cx < 0 || cy < 0 || cx > colorIntrin.width || cy > colorIntrin.height );
+			if( depthValue == 0 )
+				continue;
 
-				// ==== クラウドポインタの設定 ====
+			rs::float2 depthPixel ={ ( float )dx, ( float )dy };
+			float depthInMeters	  = depthValue * scale;
 
-				// depthデータ
-				float *dpX;
-				float *dpY;
-				float *dpZ;
+			rs::float3 depthPoint = depthIntrin.deproject( depthPixel, depthInMeters );
+			rs::float3 colorPoint = depthToColor.transform( depthPoint );
+			rs::float2 colorPixel = colorIntrin.project( colorPoint );
 
-				dpX = &( rsCloudPtr->points[ i ].x );
-				dpY = &( rsCloudPtr->points[ i ].y );
-				dpZ = &( rsCloudPtr->points[ i ].z );
+			const int cx = ( int )std::round( colorPixel.x );
+			const int cy = ( int )std::round( colorPixel.y );
 
-				// colorデータ
-				uint8_t *cpR;
-				uint8_t *cpG;
-				uint8_t *cpB;
+			static const float nan = std::numeric_limits<float>::quiet_NaN();
 
-				cpR = &( rsCloudPtr->points[ i ].r );
-				cpG = &( rsCloudPtr->points[ i ].g );
-				cpB = &( rsCloudPtr->points[ i ].b );
+			//不要な点の削除
+			bool depthFail = true;
+			bool colorFail = true;
 
-				// ==== クラウドデータ ====
-				// デプスデータのセットアップ
-				float realX			= 0;
-				float realY			= 0;
-				float realZ			= 0;
-				float adjustedX		= 0;
-				float adjustedY		= 0;
-				float adjustedZ		= 0;
+			depthFail = ( depthPoint.z > noisy );
+			colorFail = ( cx < 0 || cy < 0 || cx > colorIntrin.width || cy > colorIntrin.height );
 
-				realX = depthPoint.x;
-				realY = depthPoint.y;
-				realZ = depthPoint.z;
+			// ==== クラウドポインタの設定 ====
 
-				// 座標の調整
-				adjustedX = -1 * realX;
-				adjustedY = -1 * realY;
-				adjustedZ = realZ;
+			// depthデータ
+			float *dpX;
+			float *dpY;
+			float *dpZ;
 
-				// カラーポイントデータのセット
-				const uint8_t *offset = ( colorImage + ( cy * colorIntrin.width + cx ) * 3 );
+			
+			dpX = &( rsCloudPtr->points[ i ].x );
+			dpY = &( rsCloudPtr->points[ i ].y );
+			dpZ = &( rsCloudPtr->points[ i ].z );
 
-				uint8_t rawR		= 0;
-				uint8_t rawG		= 0;
-				uint8_t rawB		= 0;
-				uint8_t adjustedR	= 0;
-				uint8_t adjustedG	= 0;
-				uint8_t adjustedB	= 0;
+			// colorデータ
+			uint8_t *cpR;
+			uint8_t *cpG;
+			uint8_t *cpB;
 
-				rawR = *( offset );
-				rawG = *( offset + 1 );
-				rawB = *( offset + 2 );
+			cpR = &( rsCloudPtr->points[ i ].r );
+			cpG = &( rsCloudPtr->points[ i ].g );
+			cpB = &( rsCloudPtr->points[ i ].b );
 
-				// 色の位置調整
-				adjustedR = rawR;
-				adjustedG = rawG;
-				adjustedB = rawB;
+			// ==== クラウドデータ ====
+			// デプスデータのセットアップ
+			float realX			= 0;
+			float realY			= 0;
+			float realZ			= 0;
+			float adjustedX		= 0;
+			float adjustedY		= 0;
+			float adjustedZ		= 0;
 
-				// ==== Cloudポイントの評価 ====
-				// badポイントは削除orスキップ
-				if( depthFail || colorFail )
-				{
-					*dpX = *dpY = *dpZ = ( float )nan;
-					*cpR = *cpG = *cpB = 0;
-					continue;
-				}
-				// クラウドに追加
-				else {
-					// Fill in cloud depth
-					*dpX = adjustedX;
-					*dpY = adjustedY;
-					*dpZ = adjustedZ;
+			realX = depthPoint.x;
+			realY = depthPoint.y;
+			realZ = depthPoint.z;
 
-					// Fill in cloud color
-					*cpR = adjustedR;
-					*cpG = adjustedG;
-					*cpB = adjustedB;
+			// 座標の調整
+			adjustedX = -1 * realX;
+			adjustedY = -1 * realY;
+			adjustedZ = realZ;
 
-				}
+			// カラーポイントデータのセット
+			const uint8_t *offset = ( colorImage + ( cy * colorIntrin.width + cx ) * 3 );
+
+			uint8_t rawR		= 0;
+			uint8_t rawG		= 0;
+			uint8_t rawB		= 0;
+			uint8_t adjustedR	= 0;
+			uint8_t adjustedG	= 0;
+			uint8_t adjustedB	= 0;
+
+			rawR = *( offset );
+			rawG = *( offset + 1 );
+			rawB = *( offset + 2 );
+
+			// 色の位置調整
+			adjustedR = rawR;
+			adjustedG = rawG;
+			adjustedB = rawB;
+
+			// ==== Cloudポイントの評価 ====
+			// badポイントは削除orスキップ
+			if( depthFail || colorFail )
+			{
+				*dpX = *dpY = *dpZ = ( float )nan;
+				*cpR = *cpG = *cpB = 0;
+				continue;
+			}
+			// クラウドに追加
+			else {
+				// Fill in cloud depth
+				*dpX = adjustedX;
+				*dpY = adjustedY;
+				*dpZ = adjustedZ;
+
+				// Fill in cloud color
+				*cpR = adjustedR;
+				*cpG = adjustedG;
+				*cpB = adjustedB;
+
 			}
 		}
-
-		return EXIT_SUCCESS;
 	}
 
-	int GenerateRSPointCloud( rs::device *dev, pcl::PointCloud<pcl::PointXYZ>::Ptr rsCloudPtr )
-	{
+	return EXIT_SUCCESS;
+}
 
-		//新しいデータを待つ
-		if( dev->is_streaming( ) )
-			dev->wait_for_frames( );
+int GenerateRSPointCloud( rs::device *dev, pcl::PointCloud<pcl::PointXYZ>::Ptr rsCloudPtr )
+{
 
-		//画像用変数
-		const uint16_t * depthImage		= ( const uint16_t * )dev->get_frame_data( rs::stream::depth );
+	//新しいデータを待つ
+	if( dev->is_streaming() )
+		dev->wait_for_frames();
 
-		//デプスとカラーの合成用
-		rs::intrinsics depthIntrin		= dev->get_stream_intrinsics( rs::stream::depth );
-		float scale						= dev->get_depth_scale( );
+	//画像用変数
+	const uint16_t * depthImage		= ( const uint16_t * )dev->get_frame_data( rs::stream::depth );
 
-		//デプスの各サイズ
-		int dw	= 0;
-		int dh	= 0;
-		int dwh	= 0;
+	//デプスとカラーの合成用
+	rs::intrinsics depthIntrin		= dev->get_stream_intrinsics( rs::stream::depth );
+	float scale						= dev->get_depth_scale();
 
-		dw = depthIntrin.width;
-		dh = depthIntrin.height;
+	//デプスの各サイズ
+	int dw	= 0;
+	int dh	= 0;
+	int dwh	= 0;
 
-		dwh = dw * dh;
+	dw = depthIntrin.width;
+	dh = depthIntrin.height;
 
-		//遠距離データの削除
-		const float noisy	= 1.5;
+	dwh = dw * dh;
 
-		//Cloudデータの初期化
-		rsCloudPtr->clear( );
-		//rsCloudPtr.reset( new pcl::PointCloud<pcl::PointXYZ>( dw, dh ));
-		rsCloudPtr->is_dense = false;
-		rsCloudPtr->resize( dwh );
+	//遠距離データの削除
+	const float noisy	= 1.5;
 
-		// データの入れるためのループ
-		// 列
-		for( int dy = 0; dy < dh; ++dy ) {
+	//Cloudデータの初期化
+	rsCloudPtr->clear();
+	//rsCloudPtr.reset( new pcl::PointCloud<pcl::PointXYZ>( dw, dh ));
+	rsCloudPtr->is_dense = false;
+	rsCloudPtr->resize( dwh );
 
-			//行
-			for( int dx = 0; dx < dw; ++dx ) {
-				// インデックス取得
-				unsigned int i = dy * dw + dx;
+	// データの入れるためのループ
+	// 列
+	for( int dy = 0; dy < dh; ++dy ) {
 
-				// 16ビットの深度データ
-				uint16_t depthValue = depthImage[ i ];
+		//行
+		for( int dx = 0; dx < dw; ++dx ) {
+			// インデックス取得
+			unsigned int i = dy * dw + dx;
 
-				if( depthValue == 0 )
-					continue;
+			// 16ビットの深度データ
+			uint16_t depthValue = depthImage[ i ];
 
-				// 現実データにマップするためのスケール
-				float depthInMeters	  = depthValue * scale;
+			if( depthValue == 0 )
+				continue;
 
-				// デプスデータを現実の距離データに変換
-				rs::float2 depthPixel ={ ( float )dx, ( float )dy };
-				rs::float3 depthPoint = depthIntrin.deproject( depthPixel, depthInMeters );
+			// 現実データにマップするためのスケール
+			float depthInMeters	  = depthValue * scale;
 
-				static const float nan = std::numeric_limits<float>::quiet_NaN( );
+			// デプスデータを現実の距離データに変換
+			rs::float2 depthPixel ={ ( float )dx, ( float )dy };
+			rs::float3 depthPoint = depthIntrin.deproject( depthPixel, depthInMeters );
 
-				//不要な点の削除
-				bool depthFail = true;
+			static const float nan = std::numeric_limits<float>::quiet_NaN();
 
-				depthFail = ( depthPoint.z > noisy );
+			//不要な点の削除
+			bool depthFail = true;
 
-				// ==== クラウドポインタの設定 ====
+			depthFail = ( depthPoint.z > noisy );
 
-				// depthデータ
-				float *dpX;
-				float *dpY;
-				float *dpZ;
+			// ==== クラウドポインタの設定 ====
 
-				dpX = &( rsCloudPtr->points[ i ].x );
-				dpY = &( rsCloudPtr->points[ i ].y );
-				dpZ = &( rsCloudPtr->points[ i ].z );
+			// depthデータ
+			float *dpX;
+			float *dpY;
+			float *dpZ;
 
-				// ==== クラウドデータ ====
-				// デプスデータのセットアップ
-				float realX			= 0;
-				float realY			= 0;
-				float realZ			= 0;
-				float adjustedX		= 0;
-				float adjustedY		= 0;
-				float adjustedZ		= 0;
+			dpX = &( rsCloudPtr->points[ i ].x );
+			dpY = &( rsCloudPtr->points[ i ].y );
+			dpZ = &( rsCloudPtr->points[ i ].z );
 
-				realX = depthPoint.x;
-				realY = depthPoint.y;
-				realZ = depthPoint.z;
+			// ==== クラウドデータ ====
+			// デプスデータのセットアップ
+			float realX			= 0;
+			float realY			= 0;
+			float realZ			= 0;
+			float adjustedX		= 0;
+			float adjustedY		= 0;
+			float adjustedZ		= 0;
 
-				// 座標の調整
-				adjustedX = -1 * realX;
-				adjustedY = -1 * realY;
-				adjustedZ = realZ;
+			realX = depthPoint.x;
+			realY = depthPoint.y;
+			realZ = depthPoint.z;
 
-				// ==== Cloudポイントの評価 ====
-				// badポイントは削除orスキップ
-				if( depthFail )
-				{
-					*dpX = *dpY = *dpZ = ( float )nan;
-					continue;
-				}
-				// クラウドに追加
-				else {
-					// Fill in cloud depth
-					*dpX = adjustedX;
-					*dpY = adjustedY;
-					*dpZ = adjustedZ;
+			// 座標の調整
+			adjustedX = -1 * realX;
+			adjustedY = -1 * realY;
+			adjustedZ = realZ;
 
-				}
+			// ==== Cloudポイントの評価 ====
+			// badポイントは削除orスキップ
+			if( depthFail )
+			{
+				*dpX = *dpY = *dpZ = ( float )nan;
+				continue;
+			}
+			// クラウドに追加
+			else {
+				// Fill in cloud depth
+				*dpX = adjustedX;
+				*dpY = adjustedY;
+				*dpZ = adjustedZ;
+
 			}
 		}
-
-		return EXIT_SUCCESS;
 	}
+
+	return EXIT_SUCCESS;
+}
 }
