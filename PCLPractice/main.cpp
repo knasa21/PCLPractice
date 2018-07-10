@@ -73,7 +73,7 @@ int main( int argc, int** argv )
 	rsStreamer->Start();
 
 	// pcd ì«Ç›çûÇ›
-	pcl::io::loadPCDFile<PointType>( "..\\data\\table_scene_lms400_downsampled.pcd", *cloud );
+	pcl::io::loadPCDFile<PointType>( "..\\data\\table\\table_scene_lms400_downsampled.pcd", *cloud );
 
 	// Visualizer
 	PWCVisualizer<PointType> visualizer( "window", "rsCloud" );

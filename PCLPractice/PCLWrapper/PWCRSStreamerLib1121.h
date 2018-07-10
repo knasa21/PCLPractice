@@ -24,6 +24,9 @@ public:
 	
 
 private:
+
+	bool isEnable();
+
 	void PrintContextInfo();
 	void GetDevice( int );
 	void EnableStreame( rs::stream, rs::preset );

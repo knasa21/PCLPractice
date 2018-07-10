@@ -27,6 +27,8 @@ public:
 	virtual void Update( pcl::PointCloud<pcl::PointXYZ>::Ptr & ) = 0;
 	virtual void Update( pcl::PointCloud<pcl::PointXYZRGB>::Ptr &, bool ) = 0;
 
+private:
+	virtual bool isEnable() = 0;
 };
 
 

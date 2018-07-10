@@ -24,6 +24,10 @@ PWCRSStreamerLib1121::PWCRSStreamerLib1121( int devId = 0 )
 {
 	// contextの作成
 	ctx.reset( new rs::context() );
+	PrintContextInfo();
+
+	if( !isEnable() ) return;
+
 	GetDevice( devId );
 }
 
@@ -38,6 +42,8 @@ PWCRSStreamerLib1121::~PWCRSStreamerLib1121()
 /// </summary>
 void PWCRSStreamerLib1121::Start()
 {
+	if( !isEnable() ) return;
+
 	dev->start();
 }
 
@@ -71,6 +77,8 @@ void PWCRSStreamerLib1121::SetStreamingMode( StreamMode mode )
 /// <param name="cloud"></param>
 void PWCRSStreamerLib1121::Update( pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud )
 {
+	if( !isEnable() ) return;
+
 	GeneratePointCloud( cloud );
 }
 
@@ -80,11 +88,20 @@ void PWCRSStreamerLib1121::Update( pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud )
 /// <param name="cloud"></param>
 void PWCRSStreamerLib1121::Update( pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud, bool isColor )
 {
-
+	if( !isEnable() ) return;
 }
 
 // 非公開関数
 //----------------------------------
+
+/// <summary>
+/// 動作可能かを返す
+/// </summary>
+bool PWCRSStreamerLib1121::isEnable()
+{
+	static bool enable = ( ctx->get_device_count() > 0 );
+	return enable;
+}
 
 /// <summary>
 /// Realsenseデバイスの取得
@@ -106,8 +123,9 @@ void PWCRSStreamerLib1121::PrintContextInfo()
 		<< " connected Realsense devices."
 		<< std::endl;
 
-	if( ctx->get_device_count() == 0 )
-		throw std::runtime_error( "No device detected." );
+	if( ctx->get_device_count() == 0 ) {
+		std::cerr << "No device detected." << std::endl;
+	}
 
 }
 
@@ -116,6 +134,8 @@ void PWCRSStreamerLib1121::PrintContextInfo()
 /// </summary>
 void PWCRSStreamerLib1121::EnableStreame( rs::stream stream, rs::preset preset )
 {
+	if( !isEnable() ) return;
+
 	std::cout << "Configuring RS streaming " << dev->get_name() << "...";
 
 	dev->enable_stream( stream, preset );
