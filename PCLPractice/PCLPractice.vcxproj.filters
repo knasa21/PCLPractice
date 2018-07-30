@@ -36,6 +36,12 @@
     <ClCompile Include="PCLWrapper\PWCRSStreamerLib1121.cpp">
       <Filter>ソース ファイル\PCLWrapper\Source</Filter>
     </ClCompile>
+    <ClCompile Include="PCLWrapper\PWCRSStreamerLib2.cpp">
+      <Filter>ソース ファイル\PCLWrapper\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="PCLWrapper\PWUColor.cpp">
+      <Filter>ソース ファイル\PCLWrapper\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pcl_functions.h">
@@ -51,6 +57,12 @@
       <Filter>ソース ファイル\PCLWrapper\Header</Filter>
     </ClInclude>
     <ClInclude Include="PCLWrapper\PWIRSStreamer.h">
+      <Filter>ソース ファイル\PCLWrapper\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="PCLWrapper\PWCRSStreamerLib2.h">
+      <Filter>ソース ファイル\PCLWrapper\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="PCLWrapper\PWUColor.h">
       <Filter>ソース ファイル\PCLWrapper\Header</Filter>
     </ClInclude>
   </ItemGroup>
