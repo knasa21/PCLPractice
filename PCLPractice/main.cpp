@@ -122,7 +122,7 @@ void DrawSegment(
 
 // OMPS + OCCS
 void segment_objects(
-	pcl::PointCloud<PointType>::Ptr		&cloud,
+	pcl::PointCloud<PointType>::Ptr				&cloud,
 	const pcl::PointCloud<NormalType>::ConstPtr	&normals,
 	const int									&minInliers,
 	const double								&angularThreshold,
@@ -187,7 +187,7 @@ void segment_objects(
 
 	pcl::PointCloud<PointType>::CloudVectorType clusters;
 	pcl::OrganizedConnectedComponentSegmentation
-		< PointType, pcl::Label> occs( ecc );
+		<PointType, pcl::Label> occs( ecc );
 	occs.setInputCloud( cloud );
 	occs.segment( euclideanLabels, euclideanLabelIndices );
 
