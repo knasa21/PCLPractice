@@ -88,11 +88,11 @@
       <SDLCheck>false</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(realsense2_DIR)\include;$(ProjectDir)..\PCLWrapper\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OpenMPSupport>false</OpenMPSupport>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(ProjectDir)..\x64\Debug\PCLWrapper.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -118,31 +118,17 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(realsense2_DIR)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(realsense2_DIR)\include;$(ProjectDir)..\PCLWrapper\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OpenMPSupport>false</OpenMPSupport>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>$(realsense2_DIR)\lib\realsense2.lib;$(realsense2_DIR)\lib\realsense-file.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(realsense2_DIR)\lib\realsense2.lib;$(realsense2_DIR)\lib\realsense-file.lib;$(ProjectDir)..\x64\Release\PCLWrapper.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="PCLWrapper\PWCRSStreamerLib1121.cpp" />
-    <ClCompile Include="PCLWrapper\PWCRSStreamerLib2.cpp" />
-    <ClCompile Include="PCLWrapper\PWUColor.cpp" />
-    <ClCompile Include="pcl_functions.cpp" />
-    <ClCompile Include="realsense_manager.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="PCLWrapper\PWCRSStreamerLib1121.h" />
-    <ClInclude Include="PCLWrapper\PWCRSStreamerLib2.h" />
-    <ClInclude Include="PCLWrapper\PWCVisualizer.h" />
-    <ClInclude Include="PCLWrapper\PWIRSStreamer.h" />
-    <ClInclude Include="PCLWrapper\PWUColor.h" />
-    <ClInclude Include="pcl_functions.h" />
-    <ClInclude Include="realsense_manager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

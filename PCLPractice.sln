@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DownsamplingSample", "Downs
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EstimatingNormalSample", "EstimatingNormalSample\EstimatingNormalSample.vcxproj", "{3F616DA8-B289-4F1B-A565-3D78645C7C61}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PCLWrapper", "PCLWrapper\PCLWrapper\PCLWrapper.vcxproj", "{25AEB4E1-C582-4E7A-8798-4FAEABC42389}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -41,6 +43,14 @@ Global
 		{3F616DA8-B289-4F1B-A565-3D78645C7C61}.Release|x64.Build.0 = Release|x64
 		{3F616DA8-B289-4F1B-A565-3D78645C7C61}.Release|x86.ActiveCfg = Release|Win32
 		{3F616DA8-B289-4F1B-A565-3D78645C7C61}.Release|x86.Build.0 = Release|Win32
+		{25AEB4E1-C582-4E7A-8798-4FAEABC42389}.Debug|x64.ActiveCfg = Debug|x64
+		{25AEB4E1-C582-4E7A-8798-4FAEABC42389}.Debug|x64.Build.0 = Debug|x64
+		{25AEB4E1-C582-4E7A-8798-4FAEABC42389}.Debug|x86.ActiveCfg = Debug|Win32
+		{25AEB4E1-C582-4E7A-8798-4FAEABC42389}.Debug|x86.Build.0 = Debug|Win32
+		{25AEB4E1-C582-4E7A-8798-4FAEABC42389}.Release|x64.ActiveCfg = Release|x64
+		{25AEB4E1-C582-4E7A-8798-4FAEABC42389}.Release|x64.Build.0 = Release|x64
+		{25AEB4E1-C582-4E7A-8798-4FAEABC42389}.Release|x86.ActiveCfg = Release|Win32
+		{25AEB4E1-C582-4E7A-8798-4FAEABC42389}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

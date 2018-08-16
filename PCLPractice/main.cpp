@@ -14,10 +14,10 @@ VTK_MODULE_INIT( vtkRenderingOpenGL );
 #include <pcl/console/parse.h>
 
 #include "realsense_manager.h"
-#include "PCLWrapper/PWCVisualizer.h"
-#include "PCLWrapper/PWCRSStreamerLib1121.h"
-#include "PCLWrapper/PWCRSStreamerLib2.h"
-#include "PCLWrapper/PWUColor.h"
+#include "PWCVisualizer.h"
+#include "PWCRSStreamerLib1121.h"
+#include "PWCRSStreamerLib2.h"
+#include "PWUColor.h"
 
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <pcl/segmentation/organized_multi_plane_segmentation.h>
@@ -130,6 +130,7 @@ void segment_objects(
 	pcl::PointCloud<PointType>::Ptr				&dstCloud
 )
 {
+	pcl::ScopeTime scopetime( "segment_objects" );
 	// OMPS
 	pcl::OrganizedMultiPlaneSegmentation<PointType, NormalType, pcl::Label> mps;
 	mps.setMinInliers( minInliers );
@@ -183,7 +184,7 @@ void segment_objects(
 	ecc->setInputCloud( cloud );
 	ecc->setLabels( labels );
 	ecc->setExcludeLabels( planeLabels );
-	ecc->setDistanceThreshold( distanceThreshold, false );
+	ecc->setDistanceThreshold( distanceThreshold, true );
 
 	pcl::PointCloud<PointType>::CloudVectorType clusters;
 	pcl::OrganizedConnectedComponentSegmentation
@@ -191,7 +192,7 @@ void segment_objects(
 	occs.setInputCloud( cloud );
 	occs.segment( euclideanLabels, euclideanLabelIndices );
 
-	DrawSegment( cloud, euclideanLabelIndices, 100 );
+	DrawSegment( cloud, euclideanLabelIndices, 1000 );
 
 	return;
 
@@ -213,14 +214,14 @@ int main( int argc, int** argv )
 
 	// Realsense
 	//std::unique_ptr<PWIRSStreamer> rsStreamer( new PWCRSStreamerLib1121( 0 ) );
-	std::unique_ptr<PWIRSStreamer> rsStreamer( new PWCRSStreamerLib2( 0 ) );
-	rsStreamer->SetStreamingMode( PWIRSStreamer::Depth );
-	rsStreamer->Start();
+	//std::unique_ptr<PWIRSStreamer> rsStreamer( new PWCRSStreamerLib2( 0 ) );
+	//rsStreamer->SetStreamingMode( PWIRSStreamer::Depth );
+	//rsStreamer->Start();
 
 	// pcd ì«Ç›çûÇ›
 	//pcl::io::loadPCDFile<PointType>( "..\\data\\table\\table_scene_lms400_downsampled.pcd", *cloud );
 	//pcl::io::loadPCDFile<PointType>( "test_pcd.pcd", *rsCloud );
-	//pcl::io::loadPCDFile<PointType>( fileRoot + "\\floor\\floor_bin.pcd", *rsCloud );
+	pcl::io::loadPCDFile<PointType>( fileRoot + "\\floor\\floor_bin.pcd", *rsCloud );
 
 
 	// Visualizer
@@ -277,7 +278,7 @@ int main( int argc, int** argv )
 
 	while ( !visualizer.WasStopped() )
 	{
-		rsStreamer->Update( rsCloud, false );
+		//rsStreamer->Update( rsCloud, false );
 
 		static pcl::PointCloud<PointType>::Ptr		filteredCloud( new pcl::PointCloud<PointType>() );
 		static pcl::PointCloud<PointType>::Ptr		segmentedCloud( new pcl::PointCloud<PointType>() );
